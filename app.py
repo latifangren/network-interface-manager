@@ -690,6 +690,41 @@ class NetworkManager:
         
         return info
 
+    def enable_dhcp(self, iface_name):
+        """Enable DHCP on the interface"""
+        # Flush existing IPs
+        self.run_command(f"sudo ip addr flush dev {iface_name}")
+        # Start dhclient
+        result = self.run_command(f"sudo dhclient {iface_name}")
+        if result['success']:
+            return {'success': True, 'message': f'DHCP enabled on {iface_name}'}
+        else:
+            return {'success': False, 'error': result['error']}
+
+    def disable_dhcp(self, iface_name):
+        """Disable DHCP on the interface"""
+        # Stop dhclient
+        result = self.run_command(f"sudo dhclient -r {iface_name}")
+        if result['success']:
+            return {'success': True, 'message': f'DHCP released on {iface_name}'}
+        else:
+            return {'success': False, 'error': result['error']}
+
+    def set_interface_mode(self, iface_name, mode, ip=None, netmask=None):
+        """Set interface mode to DHCP or Static"""
+        if mode == 'dhcp':
+            # Disable any static IP, enable DHCP
+            return self.enable_dhcp(iface_name)
+        elif mode == 'static':
+            # Disable DHCP, set static IP
+            self.disable_dhcp(iface_name)
+            if ip:
+                return self.set_interface_ip(iface_name, ip, netmask)
+            else:
+                return {'success': False, 'error': 'IP address required for static mode'}
+        else:
+            return {'success': False, 'error': 'Invalid mode. Use "dhcp" or "static"'}
+
 # Initialize network manager
 network_manager = NetworkManager()
 
@@ -735,6 +770,18 @@ def api_set_interface_ip(iface_name):
         data['ip'], 
         data.get('netmask')
     )
+    return jsonify(result)
+
+@app.route('/api/interface/<iface_name>/mode', methods=['POST'])
+def api_set_interface_mode(iface_name):
+    """API endpoint to set interface mode (DHCP/Static)"""
+    data = request.get_json()
+    if not data or 'mode' not in data:
+        return jsonify({'error': 'Mode parameter required'}), 400
+    mode = data['mode']
+    ip = data.get('ip')
+    netmask = data.get('netmask')
+    result = network_manager.set_interface_mode(iface_name, mode, ip, netmask)
     return jsonify(result)
 
 @app.route('/api/interface/<iface_name>/scan')

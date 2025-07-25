@@ -23,6 +23,7 @@ class NetworkInterfaceManager {
                 this.closeModal();
                 this.closeWirelessModal();
                 this.closeIpModal();
+                this.closeModeModal(); // Added for mode modal
             }
         });
 
@@ -38,6 +39,7 @@ class NetworkInterfaceManager {
                 this.closeModal();
                 this.closeWirelessModal();
                 this.closeIpModal();
+                this.closeModeModal(); // Added for mode modal
             }
             if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
                 e.preventDefault();
@@ -161,6 +163,10 @@ class NetworkInterfaceManager {
                         <button class="btn btn-secondary btn-small" onclick="networkManager.showIpConfig('${name}')">
                             <i class="fas fa-network-wired"></i>
                             Configure IP
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="networkManager.showModeConfig('${name}')">
+                            <i class="fas fa-cogs"></i>
+                            Configure Mode
                         </button>
                         ${iface.type === 'wireless' ? 
                             `<button class="btn btn-warning btn-small" onclick="networkManager.scanWireless('${name}')">
@@ -531,6 +537,51 @@ class NetworkInterfaceManager {
     closeIpModal() {
         document.getElementById('ipModal').style.display = 'none';
         this.currentInterface = null;
+    }
+
+    showModeConfig(interfaceName) {
+        this.currentInterface = interfaceName;
+        document.getElementById('modeModalTitle').textContent = `Configure Mode for ${interfaceName}`;
+        // Reset form
+        document.querySelector('#modeConfigForm input[value="dhcp"]').checked = true;
+        document.getElementById('staticFields').style.display = 'none';
+        document.getElementById('modeIpAddress').value = '';
+        document.getElementById('modeNetmask').value = '24';
+        document.getElementById('modeModal').style.display = 'block';
+    }
+
+    async configureMode() {
+        if (!this.currentInterface) return;
+        const mode = document.querySelector('#modeConfigForm input[name="mode"]:checked').value;
+        const ip = document.getElementById('modeIpAddress').value;
+        const netmask = document.getElementById('modeNetmask').value;
+        let payload = { mode };
+        if (mode === 'static') {
+            if (!ip || !netmask) {
+                this.showToast('Please fill in IP and netmask for static mode', 'warning');
+                return;
+            }
+            payload.ip = ip;
+            payload.netmask = netmask;
+        }
+        try {
+            const response = await fetch(`/api/interface/${this.currentInterface}/mode`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.showToast(`Mode applied to ${this.currentInterface}`, 'success');
+                this.closeModeModal();
+                setTimeout(() => this.loadInterfaces(), 1000);
+            } else {
+                this.showToast(`Failed to set mode: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error configuring mode:', error);
+            this.showToast('Failed to configure mode', 'error');
+        }
     }
 
     showToast(message, type = 'info') {
@@ -1034,6 +1085,10 @@ function closeIpModal() {
     networkManager.closeIpModal();
 }
 
+function closeModeModal() {
+    networkManager.closeModeModal();
+}
+
 function closeRoutingModal() {
     networkManager.closeRoutingModal();
 }
@@ -1227,4 +1282,20 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     
     document.head.insertAdjacentHTML('beforeend', additionalStyles);
+
+    // Mode config form event
+    document.getElementById('modeConfigForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        networkManager.configureMode();
+    });
+    // Show/hide static fields
+    document.querySelectorAll('#modeConfigForm input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'static') {
+                document.getElementById('staticFields').style.display = 'block';
+            } else {
+                document.getElementById('staticFields').style.display = 'none';
+            }
+        });
+    });
 });
