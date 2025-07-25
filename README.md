@@ -26,13 +26,12 @@ Pantau, konfigurasi, dan kelola Ethernet, WiFi, USB Tethering, VPN, dan Mihomo P
 
 ### Instalasi Cepat
 ```bash
-# Hapus folder lama jika sudah ada
-rm -rf network-interface-manager
 git clone https://github.com/username/network-interface-manager.git
 cd network-interface-manager
 chmod +x setup.sh
 sudo ./setup.sh
-```Akses web: [http://localhost:5020](http://localhost:5020)
+```
+Akses web: [http://localhost:5020](http://localhost:5020)
 
 ---
 
