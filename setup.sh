@@ -1,7 +1,6 @@
 #!/bin/bash
 # Pastikan semua script .sh memiliki permission 755
 chmod 755 ./*.sh
-#!/bin/bash
 set -e
 
 # Nama service
