@@ -1,0 +1,30 @@
+[Unit]
+Description=USB Tethering Monitor Service
+Documentation=https://github.com/network-interface-manager
+After=network.target network-online.target network-manager.service
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/acer/network-interface-manager
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin
+Environment=SCRIPT_DIR=/home/acer/network-interface-manager
+ExecStartPre=/bin/sleep 15
+ExecStart=/home/acer/network-interface-manager/usb-monitor.sh monitor
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=usb-monitor
+
+[Install]
+WantedBy=multi-user.target

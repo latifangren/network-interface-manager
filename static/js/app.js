@@ -1,5 +1,7 @@
 // Network Interface Manager JavaScript
 
+let networkManager;
+
 class NetworkInterfaceManager {
     constructor() {
         this.interfaces = {};
@@ -142,6 +144,10 @@ class NetworkInterfaceManager {
                             <i class="fas fa-info-circle"></i>
                             Details
                         </button>
+                        <button class="btn btn-info btn-small" onclick="networkManager.testInterfaceConnectivity('${name}')">
+                            <i class="fas fa-network-wired"></i>
+                            Test
+                        </button>
                         ${iface.state === 'UP' ? 
                             `<button class="btn btn-danger btn-small" onclick="networkManager.toggleInterface('${name}', 'down')">
                                 <i class="fas fa-power-off"></i>
@@ -173,6 +179,7 @@ class NetworkInterfaceManager {
             'ethernet': 'fas fa-ethernet',
             'wireless': 'fas fa-wifi',
             'usb_tethering': 'fas fa-usb',
+            'mihomo_tun': 'fas fa-rocket',
             'vpn': 'fas fa-shield-alt',
             'bridge': 'fas fa-project-diagram',
             'loopback': 'fas fa-sync-alt',
@@ -570,9 +577,443 @@ class NetworkInterfaceManager {
             this.refreshInterval = null;
         }
     }
+    async testInterfaceConnectivity(interfaceName) {
+        try {
+            this.showToast(`Testing connectivity for ${interfaceName}...`, 'info');
+            
+            const response = await fetch(`/api/interface/${interfaceName}/test`);
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Show test results in modal
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+                
+                modalTitle.textContent = `Connectivity Test: ${interfaceName}`;
+                
+                const statusIcon = (success) => success ? '✅' : '❌';
+                const statusText = (success) => success ? 'PASSED' : 'FAILED';
+                
+                modalBody.innerHTML = `
+                    <div class="connectivity-test-results">
+                        <div class="test-summary">
+                            <h4><i class="fas fa-network-wired"></i> Connectivity Test Results</h4>
+                            <div class="test-overview">
+                                <div class="test-score">
+                                    ${[result.ping_gateway, result.ping_dns, result.http_test].filter(Boolean).length}/3 Tests Passed
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="test-details">
+                            <div class="test-item">
+                                <div class="test-name">
+                                    <i class="fas fa-route"></i>
+                                    Gateway Ping
+                                </div>
+                                <div class="test-result ${result.ping_gateway ? 'success' : 'failed'}">
+                                    ${statusIcon(result.ping_gateway)} ${statusText(result.ping_gateway)}
+                                </div>
+                                ${result.gateway ? `<div class="test-info">Gateway: ${result.gateway}</div>` : ''}
+                            </div>
+                            
+                            <div class="test-item">
+                                <div class="test-name">
+                                    <i class="fas fa-server"></i>
+                                    DNS Connectivity
+                                </div>
+                                <div class="test-result ${result.ping_dns ? 'success' : 'failed'}">
+                                    ${statusIcon(result.ping_dns)} ${statusText(result.ping_dns)}
+                                </div>
+                                <div class="test-info">Target: 8.8.8.8</div>
+                            </div>
+                            
+                            <div class="test-item">
+                                <div class="test-name">
+                                    <i class="fas fa-globe"></i>
+                                    HTTP Connectivity
+                                </div>
+                                <div class="test-result ${result.http_test ? 'success' : 'failed'}">
+                                    ${statusIcon(result.http_test)} ${statusText(result.http_test)}
+                                </div>
+                                ${result.public_ip ? `<div class="test-info">Public IP: ${result.public_ip}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        ${result.errors && result.errors.length > 0 ? `
+                            <div class="test-errors">
+                                <h5><i class="fas fa-exclamation-triangle"></i> Errors:</h5>
+                                ${result.errors.map(error => `<div class="error-item">${error}</div>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                this.showModal();
+                
+                // Show summary toast
+                const passedTests = [result.ping_gateway, result.ping_dns, result.http_test].filter(Boolean).length;
+                if (passedTests === 3) {
+                    this.showToast(`${interfaceName}: All connectivity tests passed!`, 'success');
+                } else if (passedTests > 0) {
+                    this.showToast(`${interfaceName}: ${passedTests}/3 tests passed`, 'warning');
+                } else {
+                    this.showToast(`${interfaceName}: All connectivity tests failed`, 'error');
+                }
+            } else {
+                this.showToast(`Failed to test ${interfaceName}: ${result.error || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error testing interface connectivity:', error);
+            this.showToast('Failed to test interface connectivity', 'error');
+        }
+    }
+
+    async checkRoutingHealth() {
+        try {
+            this.showToast('Checking routing health...', 'info');
+            
+            const response = await fetch('/api/routing/health');
+            const health = await response.json();
+            
+            if (response.ok) {
+                this.showRoutingHealthModal(health);
+            } else {
+                this.showToast('Failed to check routing health', 'error');
+            }
+        } catch (error) {
+            console.error('Error checking routing health:', error);
+            this.showToast('Failed to check routing health', 'error');
+        }
+    }
+
+    showRoutingHealthModal(health) {
+        const modalBody = document.getElementById('routingModalBody');
+        
+        const statusIcon = health.issues.length === 0 ? '✅' : '⚠️';
+        const statusText = health.issues.length === 0 ? 'Healthy' : `${health.issues.length} Issues Found`;
+        
+        modalBody.innerHTML = `
+            <div class="routing-health">
+                <div class="health-summary">
+                    <div class="health-status">
+                        <span class="status-icon">${statusIcon}</span>
+                        <span class="status-text">${statusText}</span>
+                    </div>
+                    <div class="health-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Default Routes:</span>
+                            <span class="stat-value">${health.default_routes_count}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Load Balancing:</span>
+                            <span class="stat-value">${health.load_balancing_active ? 'Active' : 'Inactive'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${health.issues.length > 0 ? `
+                    <div class="health-issues">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Issues Detected:</h4>
+                        ${health.issues.map(issue => `
+                            <div class="issue-item">
+                                <i class="fas fa-times-circle"></i>
+                                ${issue}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                ${health.suggestions.length > 0 ? `
+                    <div class="health-suggestions">
+                        <h4><i class="fas fa-lightbulb"></i> Suggestions:</h4>
+                        ${health.suggestions.map(suggestion => `
+                            <div class="suggestion-item">
+                                <i class="fas fa-arrow-right"></i>
+                                ${suggestion}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <div class="health-actions">
+                    ${health.issues.length > 0 ? `
+                        <button class="btn btn-danger" onclick="networkManager.fixRoutingFromModal()">
+                            <i class="fas fa-tools"></i>
+                            Auto-Fix Issues
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-secondary" onclick="networkManager.closeRoutingModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('routingModal').style.display = 'block';
+    }
+
+    async fixRouting() {
+        try {
+            this.showToast('Fixing routing issues...', 'info');
+            
+            const response = await fetch('/api/routing/fix', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.showRoutingFixModal(result);
+            } else {
+                this.showToast('Failed to fix routing', 'error');
+            }
+        } catch (error) {
+            console.error('Error fixing routing:', error);
+            this.showToast('Failed to fix routing', 'error');
+        }
+    }
+
+    showRoutingFixModal(result) {
+        const modalBody = document.getElementById('routingFixModalBody');
+        
+        const statusIcon = result.success ? '✅' : '❌';
+        const statusText = result.success ? 'Success' : 'Failed';
+        
+        modalBody.innerHTML = `
+            <div class="routing-fix-results">
+                <div class="fix-summary">
+                    <div class="fix-status ${result.success ? 'success' : 'failed'}">
+                        <span class="status-icon">${statusIcon}</span>
+                        <span class="status-text">Routing Fix: ${statusText}</span>
+                    </div>
+                </div>
+                
+                ${result.actions_taken.length > 0 ? `
+                    <div class="fix-actions">
+                        <h4><i class="fas fa-check-circle"></i> Actions Taken:</h4>
+                        ${result.actions_taken.map(action => `
+                            <div class="action-item">
+                                <i class="fas fa-arrow-right"></i>
+                                ${action}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                ${result.errors.length > 0 ? `
+                    <div class="fix-errors">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Errors:</h4>
+                        ${result.errors.map(error => `
+                            <div class="error-item">
+                                <i class="fas fa-times-circle"></i>
+                                ${error}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                ${result.before && result.after ? `
+                    <div class="fix-comparison">
+                        <div class="comparison-section">
+                            <h5>Before Fix:</h5>
+                            <div class="comparison-stats">
+                                <span>Issues: ${result.before.issues ? result.before.issues.length : 0}</span>
+                                <span>Load Balancing: ${result.before.load_balancing_active ? 'Active' : 'Inactive'}</span>
+                            </div>
+                        </div>
+                        <div class="comparison-section">
+                            <h5>After Fix:</h5>
+                            <div class="comparison-stats">
+                                <span>Issues: ${result.after.issues ? result.after.issues.length : 0}</span>
+                                <span>Load Balancing: ${result.after.load_balancing_active ? 'Active' : 'Inactive'}</span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="fix-actions-buttons">
+                    <button class="btn btn-primary" onclick="networkManager.refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh Interfaces
+                    </button>
+                    <button class="btn btn-secondary" onclick="networkManager.closeRoutingFixModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('routingFixModal').style.display = 'block';
+        
+        // Show result toast
+        if (result.success) {
+            this.showToast('Routing issues fixed successfully!', 'success');
+        } else {
+            this.showToast('Failed to fix some routing issues', 'error');
+        }
+    }
+
+    async refreshInterfaces() {
+        try {
+            this.showToast('Refreshing interfaces and detecting changes...', 'info');
+            
+            const response = await fetch('/api/interfaces/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                if (result.changes_detected.length > 0) {
+                    this.showToast(`Changes detected: ${result.changes_detected.join(', ')}`, 'warning');
+                    
+                    // If IP changes detected, suggest routing fix
+                    if (result.changed_ips.length > 0) {
+                        setTimeout(() => {
+                            if (confirm('IP address changes detected. Do you want to fix routing automatically?')) {
+                                this.fixRouting();
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    this.showToast('No interface changes detected', 'info');
+                }
+                
+                // Refresh the interface display
+                this.loadInterfaces();
+            } else {
+                this.showToast('Failed to refresh interfaces', 'error');
+            }
+        } catch (error) {
+            console.error('Error refreshing interfaces:', error);
+            this.showToast('Failed to refresh interfaces', 'error');
+        }
+    }
+
+    fixRoutingFromModal() {
+        this.closeRoutingModal();
+        this.fixRouting();
+    }
+
+    closeRoutingModal() {
+        document.getElementById('routingModal').style.display = 'none';
+    }
+
+    closeRoutingFixModal() {
+        document.getElementById('routingFixModal').style.display = 'none';
+    }
+
+    async setupLoadBalancing() {
+        try {
+            this.showToast('Setting up load balancing...', 'info');
+            
+            const response = await fetch('/api/usb-tethering/setup-load-balancing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showToast('Load balancing configured successfully!', 'success');
+                setTimeout(() => this.loadInterfaces(), 1000);
+            } else {
+                this.showToast(`Failed to setup load balancing: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error setting up load balancing:', error);
+            this.showToast('Failed to setup load balancing', 'error');
+        }
+    }
+
+    async configureUsbTethering() {
+        try {
+            this.showToast('Configuring USB tethering...', 'info');
+            
+            const response = await fetch('/api/usb-tethering/configure', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showToast('USB tethering configured successfully!', 'success');
+                setTimeout(() => this.loadInterfaces(), 1000);
+            } else {
+                this.showToast(`Failed to configure USB tethering: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error configuring USB tethering:', error);
+            this.showToast('Failed to configure USB tethering', 'error');
+        }
+    }
+
+    async monitorUsbTethering() {
+        try {
+            this.showToast('Checking USB tethering status...', 'info');
+            
+            const response = await fetch('/api/usb-tethering/monitor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showToast('USB tethering monitoring completed!', 'success');
+                
+                // Show monitoring results in modal
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+                
+                modalTitle.textContent = 'USB Tethering Monitor Results';
+                modalBody.innerHTML = `
+                    <div class="usb-monitor-results">
+                        <h4><i class="fas fa-usb"></i> USB Tethering Status</h4>
+                        <pre>${result.output}</pre>
+                        ${result.changes_detected ? '<p class="text-warning">⚠️ Changes detected and reconfigured!</p>' : '<p class="text-success">✅ No changes needed</p>'}
+                    </div>
+                `;
+                
+                this.showModal();
+                setTimeout(() => this.loadInterfaces(), 1000);
+            } else {
+                this.showToast(`USB monitoring failed: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error monitoring USB tethering:', error);
+            this.showToast('Failed to monitor USB tethering', 'error');
+        }
+    }
 }
 
 // Global functions for HTML onclick events
+function refreshInterfaces() {
+    networkManager.refreshInterfaces();
+}
+
+function checkRoutingHealth() {
+    networkManager.checkRoutingHealth();
+}
+
+function fixRouting() {
+    networkManager.fixRouting();
+}
+
 function refreshData() {
     networkManager.refreshData();
 }
@@ -593,11 +1034,44 @@ function closeIpModal() {
     networkManager.closeIpModal();
 }
 
-// Initialize the application
-let networkManager;
+function closeRoutingModal() {
+    networkManager.closeRoutingModal();
+}
 
+function closeRoutingFixModal() {
+    networkManager.closeRoutingFixModal();
+}
+function setupLoadBalancing() {
+    networkManager.setupLoadBalancing();
+}
+
+function configureUsbTethering() {
+    networkManager.configureUsbTethering();
+}
+
+function monitorUsbTethering() {
+    networkManager.monitorUsbTethering();
+}
+
+// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
     networkManager = new NetworkInterfaceManager();
+    
+    // Add event listeners for routing buttons
+    const routingHealthBtn = document.getElementById('routing-health-btn');
+    const fixRoutingBtn = document.getElementById('fix-routing-btn');
+    
+    if (routingHealthBtn) {
+        routingHealthBtn.addEventListener('click', () => {
+            networkManager.checkRoutingHealth();
+        });
+    }
+    
+    if (fixRoutingBtn) {
+        fixRoutingBtn.addEventListener('click', () => {
+            networkManager.fixRouting();
+        });
+    }
     
     // Add additional styles for modal content
     const additionalStyles = `

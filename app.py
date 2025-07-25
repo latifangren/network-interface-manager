@@ -135,14 +135,46 @@ class NetworkManager:
             return 'wireless'
         elif iface_name.startswith('docker') or iface_name.startswith('br-'):
             return 'bridge'
+        elif iface_name == 'Meta' or iface_name.startswith('mihomo'):
+            return 'mihomo_tun'
         elif 'tailscale' in iface_name or iface_name.startswith('tun'):
             return 'vpn'
-        elif iface_name.startswith('usb') or iface_name.startswith('rndis') or 'usb' in iface_name.lower():
-            return 'usb_tethering'
+        elif (iface_name.startswith('usb') or iface_name.startswith('rndis') or 
+              'usb' in iface_name.lower() or iface_name.startswith('enx')):
+            # Check if it's actually a USB tethering interface
+            if self.is_usb_tethering_interface(iface_name):
+                return 'usb_tethering'
+            elif iface_name.startswith('enx'):
+                return 'usb_tethering'  # enx interfaces are typically USB ethernet
+            else:
+                return 'usb_tethering'
         elif iface_name.startswith('ppp'):
             return 'ppp'
         else:
             return 'other'
+
+    def is_usb_tethering_interface(self, iface_name):
+        """Check if interface is USB tethering by examining system info"""
+        try:
+            # Check if interface is associated with USB device
+            usb_check = self.run_command(f"readlink /sys/class/net/{iface_name}/device 2>/dev/null")
+            if usb_check['success'] and 'usb' in usb_check['output']:
+                return True
+            
+            # Check dmesg for RNDIS or USB tethering mentions
+            dmesg_check = self.run_command(f"dmesg | grep -i '{iface_name}' | grep -i 'rndis\\|usb'")
+            if dmesg_check['success'] and dmesg_check['output']:
+                return True
+            
+            # Check if interface name pattern suggests USB tethering
+            if (iface_name.startswith('enx') or 'usb' in iface_name.lower() or 
+                iface_name.startswith('rndis')):
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error checking USB tethering for {iface_name}: {e}")
+        
+        return False
 
     def get_interface_mtu(self, iface_name):
         """Get interface MTU"""
@@ -351,6 +383,312 @@ class NetworkManager:
             info['default_route'] = result['output']
         
         return info
+    def test_interface_connectivity(self, iface_name):
+        """Test interface connectivity and routing"""
+        result = {
+            'interface': iface_name,
+            'ping_gateway': False,
+            'ping_dns': False,
+            'http_test': False,
+            'public_ip': None,
+            'gateway': None,
+            'errors': []
+        }
+        
+        try:
+            # Get interface gateway
+            gateway = self.get_interface_gateway(iface_name)
+            result['gateway'] = gateway
+            
+            if gateway:
+                # Test gateway ping
+                ping_result = self.run_command(f"ping -c 2 -W 3 -I {iface_name} {gateway}")
+                result['ping_gateway'] = ping_result['success']
+                if not ping_result['success']:
+                    result['errors'].append(f"Gateway ping failed: {ping_result['error']}")
+            
+            # Test DNS ping
+            dns_result = self.run_command(f"ping -c 2 -W 3 -I {iface_name} 8.8.8.8")
+            result['ping_dns'] = dns_result['success']
+            if not dns_result['success']:
+                result['errors'].append(f"DNS ping failed: {dns_result['error']}")
+            
+            # Test HTTP connectivity and get public IP
+            http_result = self.run_command(f"curl -s --connect-timeout 10 --interface {iface_name} http://httpbin.org/ip")
+            if http_result['success']:
+                try:
+                    import json
+                    ip_data = json.loads(http_result['output'])
+                    result['public_ip'] = ip_data.get('origin', 'Unknown')
+                    result['http_test'] = True
+                except:
+                    result['errors'].append("Failed to parse HTTP response")
+            else:
+                result['errors'].append(f"HTTP test failed: {http_result['error']}")
+                
+        except Exception as e:
+            result['errors'].append(f"Test error: {str(e)}")
+        
+        return result
+
+    def check_routing_health(self):
+        """Check routing table health and identify issues"""
+        issues = []
+        suggestions = []
+        
+        # Get routing table
+        route_result = self.run_command("ip route show")
+        if not route_result['success']:
+            return {'issues': ['Cannot read routing table'], 'suggestions': []}
+        
+        routes = route_result['output'].split('\n')
+        default_routes = [r for r in routes if r.startswith('default')]
+        
+        # Check for incomplete default routes
+        incomplete_routes = [r for r in default_routes if r.strip() == 'default']
+        if incomplete_routes:
+            issues.append(f"Found {len(incomplete_routes)} incomplete default route(s)")
+            suggestions.append("Remove incomplete routes with: sudo ip route del default")
+        
+        # Check for too many default routes
+        if len(default_routes) > 3:
+            issues.append(f"Too many default routes ({len(default_routes)})")
+            suggestions.append("Consider cleaning up redundant routes")
+        
+        # Check for load balancing route
+        lb_routes = [r for r in routes if 'nexthop' in r]
+        if not lb_routes and len(default_routes) > 1:
+            issues.append("Multiple default routes without load balancing")
+            suggestions.append("Configure proper load balancing with nexthop")
+        
+        # Check gateway connectivity
+        gateways = []
+        for route in default_routes:
+            if 'via' in route:
+                parts = route.split()
+                for i, part in enumerate(parts):
+                    if part == 'via' and i + 1 < len(parts):
+                        gateways.append(parts[i + 1])
+        
+        for gw in set(gateways):
+            ping_result = self.run_command(f"ping -c 1 -W 2 {gw}")
+            if not ping_result['success']:
+                issues.append(f"Gateway {gw} is not reachable")
+                suggestions.append(f"Check connection to gateway {gw}")
+        
+        return {
+            'issues': issues,
+            'suggestions': suggestions,
+            'default_routes_count': len(default_routes),
+            'load_balancing_active': len(lb_routes) > 0
+        }
+    def auto_fix_routing(self):
+        """Automatically detect and fix routing issues"""
+        result = {
+            'success': False,
+            'actions_taken': [],
+            'errors': [],
+            'before': {},
+            'after': {}
+        }
+        
+        try:
+            # Get current routing state
+            health_before = self.check_routing_health()
+            result['before'] = health_before
+            
+            # Get current routes
+            route_result = self.run_command("ip route show")
+            if not route_result['success']:
+                result['errors'].append("Cannot read routing table")
+                return result
+            
+            routes = route_result['output'].split('\n')
+            default_routes = [r for r in routes if r.startswith('default')]
+            
+            # Remove incomplete default routes
+            incomplete_routes = [r for r in default_routes if r.strip() == 'default']
+            if incomplete_routes:
+                remove_result = self.run_command("sudo ip route del default")
+                if remove_result['success']:
+                    result['actions_taken'].append("Removed incomplete default routes")
+                else:
+                    result['errors'].append(f"Failed to remove incomplete routes: {remove_result['error']}")
+            
+            # Detect available gateways
+            gateways = self.detect_available_gateways()
+            
+            if len(gateways) >= 2:
+                # Setup load balancing with detected gateways
+                nexthops = []
+                for gw_info in gateways:
+                    nexthops.append(f"nexthop via {gw_info['gateway']} dev {gw_info['interface']} weight 1")
+                
+                lb_command = f"sudo ip route add default {' '.join(nexthops)}"
+                lb_result = self.run_command(lb_command)
+                
+                if lb_result['success']:
+                    result['actions_taken'].append(f"Configured load balancing with {len(gateways)} gateways")
+                    result['success'] = True
+                else:
+                    result['errors'].append(f"Failed to setup load balancing: {lb_result['error']}")
+            
+            elif len(gateways) == 1:
+                # Setup single default route
+                gw_info = gateways[0]
+                single_route_cmd = f"sudo ip route add default via {gw_info['gateway']} dev {gw_info['interface']}"
+                single_result = self.run_command(single_route_cmd)
+                
+                if single_result['success']:
+                    result['actions_taken'].append(f"Configured single default route via {gw_info['interface']}")
+                    result['success'] = True
+                else:
+                    result['errors'].append(f"Failed to setup default route: {single_result['error']}")
+            
+            else:
+                result['errors'].append("No available gateways detected")
+            
+            # Get routing state after fix
+            health_after = self.check_routing_health()
+            result['after'] = health_after
+            
+        except Exception as e:
+            result['errors'].append(f"Auto-fix error: {str(e)}")
+        
+        return result
+
+    def detect_available_gateways(self):
+        """Detect available gateways from active interfaces"""
+        gateways = []
+        
+        # Get all UP interfaces
+        interfaces = self.get_network_interfaces()
+        
+        for name, iface in interfaces.items():
+            if iface['state'] == 'UP' and iface['type'] not in ['loopback', 'bridge', 'mihomo_tun']:
+                # Try to find gateway for this interface
+                gateway = self.get_interface_gateway(name)
+                
+                if not gateway:
+                    # Try to detect gateway from network
+                    for addr in iface['addresses']:
+                        if addr['type'] == 'IPv4' and '/' in addr['address']:
+                            ip_addr = addr['address'].split('/')[0]
+                            network_parts = ip_addr.split('.')
+                            if len(network_parts) == 4:
+                                # Try common gateway patterns
+                                possible_gateways = [
+                                    f"{network_parts[0]}.{network_parts[1]}.{network_parts[2]}.1",
+                                    f"{network_parts[0]}.{network_parts[1]}.{network_parts[2]}.254"
+                                ]
+                                
+                                for possible_gw in possible_gateways:
+                                    ping_result = self.run_command(f"ping -c 1 -W 2 {possible_gw}")
+                                    if ping_result['success']:
+                                        gateway = possible_gw
+                                        break
+                
+                if gateway:
+                    # Verify gateway is reachable
+                    ping_result = self.run_command(f"ping -c 1 -W 2 {gateway}")
+                    if ping_result['success']:
+                        gateways.append({
+                            'interface': name,
+                            'gateway': gateway,
+                            'type': iface['type']
+                        })
+        
+        return gateways
+
+    def refresh_interface_config(self):
+        """Refresh interface configuration and detect changes"""
+        result = {
+            'success': False,
+            'changes_detected': [],
+            'new_interfaces': [],
+            'changed_ips': [],
+            'actions_taken': []
+        }
+        
+        try:
+            # Get current interfaces
+            old_interfaces = self.interface_stats_cache.copy()
+            
+            # Force refresh
+            self.last_update = 0
+            new_interfaces = self.get_network_interfaces()
+            
+            # Detect new interfaces
+            for name in new_interfaces:
+                if name not in old_interfaces:
+                    result['new_interfaces'].append(name)
+                    result['changes_detected'].append(f"New interface detected: {name}")
+            
+            # Detect IP changes
+            for name, new_iface in new_interfaces.items():
+                if name in old_interfaces:
+                    old_addrs = {addr['address'] for addr in old_interfaces[name].get('addresses', [])}
+                    new_addrs = {addr['address'] for addr in new_iface.get('addresses', [])}
+                    
+                    if old_addrs != new_addrs:
+                        result['changed_ips'].append({
+                            'interface': name,
+                            'old_ips': list(old_addrs),
+                            'new_ips': list(new_addrs)
+                        })
+                        result['changes_detected'].append(f"IP changed on {name}")
+            
+            # If changes detected, suggest routing refresh
+            if result['changes_detected']:
+                result['actions_taken'].append("Interface changes detected - routing may need refresh")
+                result['success'] = True
+            else:
+                result['success'] = True
+                result['actions_taken'].append("No interface changes detected")
+                
+        except Exception as e:
+            result['errors'] = [f"Refresh error: {str(e)}"]
+        
+        return result
+    def get_mihomo_info(self):
+        """Get Mihomo proxy service information"""
+        info = {
+            'running': False,
+            'config_path': '/etc/mihomo/config.yaml',
+            'tun_interface': None,
+            'configured_interfaces': [],
+            'load_balance_group': None
+        }
+        
+        # Check if Mihomo service is running
+        result = self.run_command("systemctl is-active mihomo 2>/dev/null || pgrep -f mihomo")
+        if result['success'] and ('active' in result['output'] or result['output'].strip()):
+            info['running'] = True
+        
+        # Check for TUN interface
+        tun_result = self.run_command("ip link show | grep Meta")
+        if tun_result['success'] and tun_result['output']:
+            info['tun_interface'] = 'Meta'
+        
+        # Try to read Mihomo config to get interface information
+        try:
+            config_result = self.run_command("cat /etc/mihomo/config.yaml 2>/dev/null")
+            if config_result['success']:
+                config_content = config_result['output']
+                
+                # Look for interface-name configurations
+                import re
+                interface_matches = re.findall(r'interface-name:\s*["\']?([^"\'\\s]+)["\']?', config_content)
+                info['configured_interfaces'] = list(set(interface_matches))
+                
+                # Check for load balance configuration
+                if 'load-balance' in config_content and 'LB-LAN-USB' in config_content:
+                    info['load_balance_group'] = 'LB-LAN-USB'
+                    
+        except Exception as e:
+            logger.error(f"Error reading Mihomo config: {e}")
+        
+        return info
 
 # Initialize network manager
 network_manager = NetworkManager()
@@ -405,16 +743,140 @@ def api_scan_wireless(iface_name):
     result = network_manager.get_wireless_networks(iface_name)
     return jsonify(result)
 
+@app.route('/api/routing/fix', methods=['POST'])
+def api_fix_routing():
+    """API endpoint to automatically fix routing issues"""
+    result = network_manager.auto_fix_routing()
+    return jsonify(result)
+
+@app.route('/api/interfaces/refresh', methods=['POST'])
+def api_refresh_interfaces():
+    """API endpoint to refresh interface configuration and detect changes"""
+    result = network_manager.refresh_interface_config()
+    return jsonify(result)
+
+@app.route('/api/routing/gateways')
+def api_detect_gateways():
+    """API endpoint to detect available gateways"""
+    gateways = network_manager.detect_available_gateways()
+    return jsonify({'gateways': gateways})
+
+@app.route('/api/interface/<iface_name>/test')
+def api_test_interface(iface_name):
+    """API endpoint to test interface connectivity"""
+    result = network_manager.test_interface_connectivity(iface_name)
+    return jsonify(result)
+
+@app.route('/api/routing/health')
+def api_routing_health():
+    """API endpoint to check routing health"""
+    health = network_manager.check_routing_health()
+    return jsonify(health)
+
+@app.route('/api/mihomo')
+def api_mihomo_info():
+    """API endpoint to get Mihomo service information"""
+    info = network_manager.get_mihomo_info()
+    return jsonify(info)
+
 @app.route('/api/system')
 def api_system_info():
     """API endpoint to get system information"""
     info = network_manager.get_system_info()
+    # Add Mihomo information to system info
+    info['mihomo'] = network_manager.get_mihomo_info()
     return jsonify(info)
 
 @app.route('/static/<path:filename>')
 def static_files(filename):
     """Serve static files"""
     return send_from_directory('static', filename)
+
+@app.route('/api/usb-tethering/configure', methods=['POST'])
+def configure_usb_tethering():
+    """Configure USB tethering interfaces automatically"""
+    try:
+        result = subprocess.run(['/home/acer/network-interface-manager/configure-usb-tethering.sh'], 
+                              capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            return jsonify({
+                'success': True,
+                'message': 'USB tethering configured successfully',
+                'output': result.stdout
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Configuration failed: {result.stderr}',
+                'output': result.stdout
+            })
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'success': False,
+            'error': 'Configuration timeout - process took too long'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Configuration error: {str(e)}'
+        })
+
+@app.route('/api/usb-tethering/setup-load-balancing', methods=['POST'])
+def setup_load_balancing():
+    """Setup load balancing for USB tethering"""
+    try:
+        result = subprocess.run(['/home/acer/network-interface-manager/setup-load-balancing.sh'], 
+                              capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            return jsonify({
+                'success': True,
+                'message': 'Load balancing configured successfully',
+                'output': result.stdout
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Load balancing setup failed: {result.stderr}',
+                'output': result.stdout
+            })
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'success': False,
+            'error': 'Load balancing setup timeout'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Load balancing error: {str(e)}'
+        })
+
+@app.route('/api/usb-tethering/monitor', methods=['POST'])
+def monitor_usb_tethering():
+    """Monitor USB tethering interfaces and detect changes"""
+    try:
+        result = subprocess.run(['/home/acer/network-interface-manager/usb-monitor.sh', 'check'], 
+                              capture_output=True, text=True, timeout=30)
+        
+        changes_detected = 'reconfiguring' in result.stdout.lower() or 'change detected' in result.stdout.lower()
+        
+        return jsonify({
+            'success': True,
+            'message': 'USB tethering monitoring completed',
+            'output': result.stdout,
+            'changes_detected': changes_detected
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'success': False,
+            'error': 'Monitoring timeout'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Monitoring error: {str(e)}'
+        })
 
 if __name__ == '__main__':
     print("🌐 Network Interface Manager")

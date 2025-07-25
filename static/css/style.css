@@ -309,6 +309,7 @@ section h2 i {
 .type-ethernet { background: var(--gradient-success); color: white; }
 .type-wireless { background: var(--gradient-primary); color: white; }
 .type-usb_tethering { background: var(--gradient-warning); color: white; }
+.type-mihomo_tun { background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; }
 .type-vpn { background: var(--gradient-danger); color: white; }
 .type-bridge { background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; }
 .type-loopback { background: linear-gradient(135deg, var(--text-muted), var(--text-secondary)); color: white; }

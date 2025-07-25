@@ -1,0 +1,189 @@
+[2025-07-25 03:54:34] === USB Tethering Status ===
+[2025-07-25 03:54:34] No active USB tethering interfaces found
+[2025-07-25 03:54:34] USB-related routes: 2
+[2025-07-25 03:54:34] === End Status ===
+[2025-07-25 03:55:01] === USB Tethering Status ===
+[2025-07-25 03:55:01] No active USB tethering interfaces found
+[2025-07-25 03:55:01] USB-related routes: 2
+[2025-07-25 03:55:01] === End Status ===
+[2025-07-25 03:55:37] === USB Tethering Status ===
+[2025-07-25 03:55:37] Active USB interfaces: enx0e8e457defe7
+[2025-07-25 03:55:37]   enx0e8e457defe7: IP=192.168.42.52, Gateway=
+[2025-07-25 03:55:37] USB-related routes: 2
+[2025-07-25 03:55:37] === End Status ===
+[2025-07-25 03:55:46] No active USB interface to reconfigure
+[2025-07-25 03:57:09] Force reconfiguring interface: enx0e8e457defe7
+[2025-07-25 03:57:09] Reconfiguring routing for interface: enx0e8e457defe7
+[2025-07-25 03:57:09] Running USB tethering configuration...
+🔍 USB Tethering Auto-Configuration
+==================================
+Starting USB tethering auto-configuration...
+Detecting USB tethering interfaces...
+📱 Found USB interfaces:
+enx0e8e457defe7
+🔧 Configuring interface: enx0e8e457defe7
+📶 Bringing up interface enx0e8e457defe7...
+🌐 Requesting IP address via DHCP...
+Internet Systems Consortium DHCP Client 4.4.3-P1
+Copyright 2004-2022 Internet Systems Consortium.
+All rights reserved.
+For info, please visit https://www.isc.org/software/dhcp/
+
+Listening on LPF/enx0e8e457defe7/0e:8e:45:7d:ef:e7
+Sending on   LPF/enx0e8e457defe7/0e:8e:45:7d:ef:e7
+Sending on   Socket/fallback
+xid: warning: no netdev with useable HWADDR found for seed's uniqueness enforcement
+xid: rand init seed (0x68fd9f26) built using gethostid
+DHCPREQUEST for 192.168.42.52 on enx0e8e457defe7 to 255.255.255.255 port 67 (xid=0x14aa191)
+DHCPACK of 192.168.42.52 from 192.168.42.129 (xid=0x91a14a01)
+Error: ipv4: Address already assigned.
+bound to 192.168.42.52 -- renewal in 2712 seconds.
+✅ Interface enx0e8e457defe7 configured with IP: 192.168.42.52
+⚖️ Setting up load balancing...
+🧪 Testing connectivity...
+✅ Internet connectivity: OK
+✅ DNS resolution: OK
+
+📊 Current Network Status
+========================
+🔌 Network Interfaces:
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+      inet 127.0.0.1/8 scope host lo
+  2: enp0s25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+      inet 192.168.100.50/24 brd 192.168.100.255 scope global enp0s25
+  3: wlp2s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+  5: br-ad263485c60b: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.22.0.1/16 brd 172.22.255.255 scope global br-ad263485c60b
+  6: br-b3f662ee770e: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.20.0.1/16 brd 172.20.255.255 scope global br-b3f662ee770e
+  7: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+      inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+  9: br-342066cc2428: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.24.0.1/16 brd 172.24.255.255 scope global br-342066cc2428
+  10: br-35e96b20832e: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.23.0.1/16 brd 172.23.255.255 scope global br-35e96b20832e
+  11: br-3f5645a17c3a: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.18.0.1/16 brd 172.18.255.255 scope global br-3f5645a17c3a
+  12: br-834a5cdd96d5: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.19.0.1/16 brd 172.19.255.255 scope global br-834a5cdd96d5
+  20: vethf6474ac@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  23: veth8ac9fe8@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  24: vethb87bbcf@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  26: veth16b2408@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  10527: br-c9f63a458192: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.25.0.1/16 brd 172.25.255.255 scope global br-c9f63a458192
+  6961: tailscale0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1280 qdisc fq_codel state UNKNOWN group default qlen 500
+      inet 100.79.102.98/32 scope global tailscale0
+  12393: vethce7f5df@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  12395: veth07946de@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  12396: Meta: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 9000 qdisc fq_codel state UNKNOWN group default qlen 500
+      inet 198.18.0.1/30 brd 198.18.0.3 scope global Meta
+  12397: enx0e8e457defe7: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+      inet 192.168.42.52/24 brd 192.168.42.255 scope global dynamic enx0e8e457defe7
+
+🛣️ Routing Table:
+  default 
+  	nexthop via 192.168.100.1 dev enp0s25 weight 1 
+  	nexthop via 192.168.42.129 dev enx0e8e457defe7 weight 1 
+  172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+  172.18.0.0/16 dev br-3f5645a17c3a proto kernel scope link src 172.18.0.1 linkdown 
+  172.19.0.0/16 dev br-834a5cdd96d5 proto kernel scope link src 172.19.0.1 linkdown 
+  172.20.0.0/16 dev br-b3f662ee770e proto kernel scope link src 172.20.0.1 linkdown 
+  172.22.0.0/16 dev br-ad263485c60b proto kernel scope link src 172.22.0.1 linkdown 
+  172.23.0.0/16 dev br-35e96b20832e proto kernel scope link src 172.23.0.1 linkdown 
+  172.24.0.0/16 dev br-342066cc2428 proto kernel scope link src 172.24.0.1 linkdown 
+  172.25.0.0/16 dev br-c9f63a458192 proto kernel scope link src 172.25.0.1 linkdown 
+  192.168.42.0/24 dev enx0e8e457defe7 proto kernel scope link src 192.168.42.52 
+  192.168.100.0/24 dev enp0s25 proto kernel scope link src 192.168.100.50 
+  198.18.0.0/30 dev Meta proto kernel scope link src 198.18.0.1 
+
+🌐 Active Connections:
+  Netid State  Recv-Q Send-Q                       Local Address:Port  Peer Address:PortProcess
+  udp   UNCONN 0      0                               172.23.0.1:46475      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:38313      0.0.0.0:*          
+  udp   UNCONN 0      0                            192.168.42.52:54730      0.0.0.0:*          
+  udp   UNCONN 0      0                               172.18.0.1:54730      0.0.0.0:*          
+  udp   UNCONN 0      0                               172.25.0.1:44514      0.0.0.0:*          
+  udp   UNCONN 0      0                               172.19.0.1:58950      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32410      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32412      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32413      0.0.0.0:*          
+
+🎉 USB tethering configuration completed!
+📱 You can now access the web interface at: http://localhost:5020
+[2025-07-25 03:57:17] USB tethering configuration completed successfully
+[2025-07-25 03:57:17] Setting up load balancing...
+🔄 Setting up load balancing for USB tethering...
+📊 Interface Information:
+  LAN (enp0s25): IP=192.168.100.50, Gateway=192.168.100.1
+  USB (enx0e8e457defe7): IP=192.168.42.52, Gateway=192.168.42.129
+🔧 Configuring load balancing...
+  Removing existing default routes...
+  Setting up routing tables...
+RTNETLINK answers: File exists
+Error: any valid prefix is expected rather than ".0/24".
+RTNETLINK answers: File exists
+RTNETLINK answers: File exists
+Error: any valid prefix is expected rather than ".0/24".
+✅ Load balancing configured successfully!
+🧪 Testing connectivity...
+✅ Internet connectivity: OK
+📋 Current routing table:
+default 
+	nexthop via 192.168.100.1 dev enp0s25 weight 1 
+	nexthop via 192.168.42.129 dev enx0e8e457defe7 weight 1 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+172.18.0.0/16 dev br-3f5645a17c3a proto kernel scope link src 172.18.0.1 linkdown 
+172.19.0.0/16 dev br-834a5cdd96d5 proto kernel scope link src 172.19.0.1 linkdown 
+172.20.0.0/16 dev br-b3f662ee770e proto kernel scope link src 172.20.0.1 linkdown 
+172.22.0.0/16 dev br-ad263485c60b proto kernel scope link src 172.22.0.1 linkdown 
+172.23.0.0/16 dev br-35e96b20832e proto kernel scope link src 172.23.0.1 linkdown 
+172.24.0.0/16 dev br-342066cc2428 proto kernel scope link src 172.24.0.1 linkdown 
+[2025-07-25 03:57:19] Load balancing setup completed successfully
+[2025-07-25 03:57:19] Testing connectivity...
+[2025-07-25 03:57:20] ✅ Internet connectivity: OK
+[2025-07-25 04:05:10] Running USB tethering check (single run)
+[2025-07-25 04:05:10] USB interface change detected: '' -> 'usb-tether'
+[2025-07-25 04:05:10] Reconfiguring routing for interface: usb-tether
+[2025-07-25 04:05:10] Running USB tethering configuration...
+🔍 USB Tethering Auto-Configuration
+==================================
+Starting USB tethering auto-configuration...
+Detecting USB tethering interfaces...
+📱 Found USB interfaces:
+usb-tether
+❌ Failed to configure USB tethering interfaces
+[2025-07-25 04:05:11] USB tethering configuration failed
+[2025-07-25 04:05:11] === USB Tethering Status ===
+[2025-07-25 04:05:11] Active USB interfaces: usb-tether
+[2025-07-25 04:05:11]   usb-tether: IP=192.168.42.52, Gateway=192.168.42.129
+[2025-07-25 04:05:11] USB-related routes: 4
+[2025-07-25 04:05:11] === End Status ===
+[2025-07-25 04:08:51] === USB Tethering Status ===
+[2025-07-25 04:08:51] Active USB interfaces: usb-tether
+[2025-07-25 04:08:51]   usb-tether: IP=192.168.42.52, Gateway=192.168.42.129
+[2025-07-25 04:08:51] USB-related routes: 4
+[2025-07-25 04:08:51] === End Status ===
+[2025-07-25 04:09:04] Running USB tethering check (single run)
+[2025-07-25 04:09:04] No USB interface changes detected
+[2025-07-25 04:09:04] === USB Tethering Status ===
+[2025-07-25 04:09:04] Active USB interfaces: usb-tether
+[2025-07-25 04:09:04]   usb-tether: IP=192.168.42.52, Gateway=192.168.42.129
+[2025-07-25 04:09:04] USB-related routes: 4
+[2025-07-25 04:09:04] === End Status ===
+[2025-07-25 04:15:16] Running USB tethering check (single run)
+[2025-07-25 04:15:16] No USB interface changes detected
+[2025-07-25 04:15:16] === USB Tethering Status ===
+[2025-07-25 04:15:16] Active USB interfaces: usb-tether
+[2025-07-25 04:15:16]   usb-tether: IP=192.168.42.52, Gateway=192.168.42.129
+[2025-07-25 04:15:16] USB-related routes: 5
+[2025-07-25 04:15:16] === End Status ===
+[2025-07-25 04:17:02] Starting USB tethering monitor (continuous mode)
+[2025-07-25 04:19:35] Running USB tethering check (single run)
+[2025-07-25 04:19:35] No USB interface changes detected
+[2025-07-25 04:19:35] === USB Tethering Status ===
+[2025-07-25 04:19:35] Active USB interfaces: usb-tether
+[2025-07-25 04:19:35]   usb-tether: IP=192.168.42.52, Gateway=192.168.42.129
+[2025-07-25 04:19:35] USB-related routes: 5
+[2025-07-25 04:19:35] === End Status ===
+[2025-07-25 09:05:39] Starting USB tethering monitor (continuous mode)

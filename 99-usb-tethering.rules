@@ -1,0 +1,17 @@
+# USB Tethering Interface Naming Rules
+# This rule renames USB tethering interfaces to "usb-tether" for consistent naming
+
+# Rule for RNDIS USB tethering devices (most Android phones)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="rndis_host", NAME="usb-tether"
+
+# Rule for CDC Ethernet USB tethering devices (some phones and devices)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="cdc_ether", ATTR{type}=="1", NAME="usb-tether"
+
+# Rule for USB Ethernet devices that are used for tethering (enx* pattern)
+SUBSYSTEM=="net", ACTION=="add", KERNEL=="enx*", DRIVERS=="rndis_host", NAME="usb-tether"
+
+# Alternative rule based on USB vendor/product for specific devices
+SUBSYSTEM=="net", ACTION=="add", ATTRS{idVendor}=="0fce", ATTRS{idProduct}=="81f9", NAME="usb-tether"
+
+# Generic rule for any USB network interface that matches tethering pattern
+SUBSYSTEM=="net", ACTION=="add", KERNELS=="*usb*", DRIVERS=="rndis_host", NAME="usb-tether"

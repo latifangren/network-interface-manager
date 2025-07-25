@@ -5,6 +5,9 @@
 echo "🌐 Network Interface Manager"
 echo "=================================="
 
+# Pastikan semua script .sh memiliki permission 755
+chmod 755 ./*.sh
+
 # Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 is not installed. Please install Python 3 first."

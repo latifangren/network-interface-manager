@@ -1,0 +1,36 @@
+[Unit]
+Description=Network Interface Manager Web Application
+Documentation=https://github.com/network-interface-manager
+After=network.target network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=acer
+Group=acer
+WorkingDirectory=/home/acer/network-interface-manager
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/acer/network-interface-manager
+ExecStart=/home/acer/network-interface-manager/venv/bin/python3 app.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=always
+RestartSec=5
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=false
+ReadWritePaths=/home/acer/network-interface-manager
+ProtectHome=false
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=network-manager
+
+[Install]
+WantedBy=multi-user.target

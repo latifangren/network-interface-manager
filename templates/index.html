@@ -19,9 +19,29 @@
                         <h1>Network Interface Manager</h1>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="refreshData()">
+                        <button class="btn btn-secondary" onclick="refreshInterfaces()">
                             <i class="fas fa-sync-alt"></i>
                             Refresh
+                        </button>
+                        <button class="btn btn-warning" onclick="checkRoutingHealth()">
+                            <i class="fas fa-route"></i>
+                            Check Routing
+                        </button>
+                        <button class="btn btn-danger" onclick="fixRouting()">
+                            <i class="fas fa-tools"></i>
+                            Fix Routing
+                        </button>
+                        <button class="btn btn-warning" onclick="configureUsbTethering()">
+                            <i class="fas fa-usb"></i>
+                            Configure USB Tethering
+                        </button>
+                        <button class="btn btn-info" onclick="setupLoadBalancing()">
+                            <i class="fas fa-balance-scale"></i>
+                            Setup Load Balancing
+                        </button>
+                        <button class="btn btn-success" onclick="monitorUsbTethering()">
+                            <i class="fas fa-search"></i>
+                            Monitor USB Tethering
                         </button>
                         <div class="status-indicator" id="connectionStatus">
                             <span class="status-dot"></span>
@@ -88,6 +108,7 @@
                                 <option value="ethernet">Ethernet</option>
                                 <option value="wireless">Wireless</option>
                                 <option value="usb_tethering">USB Tethering</option>
+                                <option value="mihomo_tun">Mihomo TUN</option>
                                 <option value="vpn">VPN</option>
                                 <option value="bridge">Bridge</option>
                                 <option value="loopback">Loopback</option>
@@ -122,6 +143,32 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <!-- Routing Health Modal -->
+    <div id="routingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Routing Health Check</h3>
+                <button class="modal-close" onclick="closeRoutingModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="routingModalBody">
+                <!-- Routing health info will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Routing Fix Modal -->
+    <div id="routingFixModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Routing Fix Results</h3>
+                <button class="modal-close" onclick="closeRoutingFixModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="routingFixModalBody">
+                <!-- Routing fix results will be loaded here -->
+            </div>
+        </div>
     </div>
 
     <!-- Interface Detail Modal -->

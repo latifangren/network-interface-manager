@@ -29,11 +29,34 @@ A comprehensive web-based network interface management tool for Linux systems. T
 - **Toast notifications** for user feedback
 - **Search and filtering** capabilities
 
+## 🚀 Mihomo Integration
+
+This application provides excellent support for **Mihomo proxy service** with TUN interface management:
+
+### Mihomo Features:
+- **TUN Interface Detection**: Automatically detects and monitors Mihomo's TUN interface ("Meta")
+- **Load Balancing Support**: Recognizes interfaces configured for load balancing in Mihomo
+- **Service Status Monitoring**: Shows Mihomo service status and configuration
+- **Dual-WAN Setup**: Perfect for managing multiple internet connections through Mihomo
+
+### Mihomo Configuration Support:
+- **Interface-specific proxies**: Detects `interface-name` configurations
+- **Load balance groups**: Identifies load balancing proxy groups
+- **TUN routing**: Monitors TUN interface traffic and statistics
+- **Multi-interface setup**: Supports LAN + USB tethering configurations
+
+### Testing Mihomo Integration:
+```bash
+cd /home/acer/network-interface-manager
+./test-mihomo.sh
+```
+
 ## Supported Interface Types
 
 - **Ethernet** (enp*, eth*)
 - **Wireless** (wlp*, wlan*)
 - **USB Tethering** (usb*, rndis*)
+- **Mihomo TUN** (Meta) - Proxy service TUN interface
 - **VPN/Tunnel** (tun*, tailscale*)
 - **Bridge** (br-*, docker*)
 - **Loopback** (lo)
@@ -135,8 +158,11 @@ The application provides a REST API for programmatic access:
 ### Wireless Operations
 - `GET /api/interface/<name>/scan` - Scan for wireless networks
 
+### Mihomo Integration
+- `GET /api/mihomo` - Get Mihomo service status and configuration
+
 ### System Information
-- `GET /api/system` - Get system network information
+- `GET /api/system` - Get system network information (includes Mihomo status)
 
 ## Configuration
 
@@ -243,3 +269,93 @@ For issues and questions:
 ---
 
 **Network Interface Manager** - Professional network interface management for Linux systems.
+## USB Interface Management
+
+### Interface Naming
+The USB tethering interface has been renamed to `usb-tether` for better consistency and management:
+- **Old name**: `enx0e8e457defe7` (hardware-based MAC address)
+- **New name**: `usb-tether` (descriptive and consistent)
+
+### Renaming Process
+The interface was renamed using NetworkManager:
+```bash
+# Create connection with new name
+sudo nmcli connection add type ethernet ifname enx0e8e457defe7 con-name usb-tether
+
+# Configure for automatic DHCP
+sudo nmcli connection modify usb-tether ipv4.method auto
+sudo nmcli connection modify usb-tether ipv6.method auto
+
+# Activate the connection
+sudo nmcli connection up usb-tether
+```
+
+### Benefits of Renaming
+1. **Consistency**: Predictable interface name across phone swaps
+2. **Scripts**: All monitoring and configuration scripts use the same name
+3. **Maintenance**: Easier to identify and manage in routing tables
+4. **Documentation**: Clear reference in logs and configuration files
+
+### Updated Scripts
+All scripts have been updated to prioritize the `usb-tether` name:
+- `usb-monitor.sh` - USB interface monitoring
+- `setup-load-balancing.sh` - Load balancing configuration  
+- `configure-usb-tethering.sh` - USB interface auto-configuration
+
+### Fallback Support
+Scripts maintain backward compatibility by falling back to `enx*` pattern detection if `usb-tether` is not found.
+## SystemD Integration
+
+### Automatic Startup
+The application is now integrated with systemd for automatic startup on system boot:
+
+#### Services Installed:
+1. **network-manager.service** - Web application (port 5020)
+2. **usb-monitor.service** - USB tethering monitoring
+
+#### Installation:
+```bash
+# Install systemd services
+sudo ./install-systemd.sh
+
+# Check service status
+./test-systemd.sh
+```
+
+#### Service Management:
+```bash
+# View service status
+systemctl status network-manager.service
+systemctl status usb-monitor.service
+
+# View logs
+journalctl -u network-manager.service -f
+journalctl -u usb-monitor.service -f
+
+# Restart services
+sudo systemctl restart network-manager.service
+sudo systemctl restart usb-monitor.service
+
+# Stop/Start services
+sudo systemctl stop network-manager.service usb-monitor.service
+sudo systemctl start network-manager.service usb-monitor.service
+```
+
+#### Uninstallation:
+```bash
+# Remove systemd integration
+sudo ./uninstall-systemd.sh
+```
+
+### Auto-Start Features:
+- ✅ Web interface starts automatically on boot
+- ✅ USB monitoring starts automatically on boot  
+- ✅ Services restart automatically if they crash
+- ✅ Proper dependency management (network-online.target)
+- ✅ Logging to systemd journal
+
+### Boot Sequence:
+1. System boots and network becomes available
+2. `usb-monitor.service` starts monitoring USB interfaces
+3. `network-manager.service` starts web interface on port 5020
+4. Both services continue running and restart if needed
