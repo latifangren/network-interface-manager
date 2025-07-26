@@ -1,0 +1,10 @@
+🌐 Network Interface Manager
+==================================================
+Starting web server on port 5020...
+Access the interface at: http://localhost:5020
+==================================================
+⚠️  Warning: Not running as root. Some operations may require sudo.
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5020 is in use by another program. Either identify and stop that program, or start the server with a different port.

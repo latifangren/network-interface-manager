@@ -247,12 +247,31 @@ class NetworkManager:
 
     def get_interface_gateway(self, iface_name):
         """Get gateway for interface"""
+        # First try to get interface-specific default route
         result = self.run_command(f"ip route show dev {iface_name} | grep default")
         if result['success'] and result['output']:
             for line in result['output'].split('\n'):
                 if 'default via' in line:
                     gateway = line.split('via')[1].split()[0]
                     return gateway
+        
+        # If no interface-specific route, check for load balancing configuration
+        result = self.run_command("ip route show default")
+        if result['success'] and result['output']:
+            lines = result['output'].split('\n')
+            for line in lines:
+                # Check for nexthop configuration with this interface
+                if 'nexthop via' in line and f'dev {iface_name}' in line:
+                    # Extract gateway from nexthop line
+                    parts = line.split()
+                    for i, part in enumerate(parts):
+                        if part == 'via' and i + 1 < len(parts):
+                            return parts[i + 1]
+                # Check for simple default via configuration
+                elif 'default via' in line and f'dev {iface_name}' in line:
+                    gateway = line.split('via')[1].split()[0]
+                    return gateway
+        
         return None
 
     def get_interface_dns(self, iface_name):
@@ -444,26 +463,46 @@ class NetworkManager:
         routes = route_result['output'].split('\n')
         default_routes = [r for r in routes if r.startswith('default')]
         
-        # Check for incomplete default routes
-        incomplete_routes = [r for r in default_routes if r.strip() == 'default']
+        # Check for incomplete default routes (but exclude load balancing configuration)
+        incomplete_routes = []
+        nexthop_routes = [r for r in routes if 'nexthop' in r]
+        
+        for route in default_routes:
+            route_stripped = route.strip()
+            # Only consider it incomplete if it's just "default" and there are no nexthop routes
+            if route_stripped == 'default' and not nexthop_routes:
+                incomplete_routes.append(route)
+            # Also check for other incomplete patterns (default without via or nexthop)
+            elif route_stripped != 'default' and 'via' not in route and 'nexthop' not in route and route_stripped != '':
+                incomplete_routes.append(route)
+        
         if incomplete_routes:
             issues.append(f"Found {len(incomplete_routes)} incomplete default route(s)")
             suggestions.append("Remove incomplete routes with: sudo ip route del default")
         
-        # Check for too many default routes
-        if len(default_routes) > 3:
+        # Check for too many default routes (but account for load balancing)
+        if len(default_routes) > 3 and not nexthop_routes:
             issues.append(f"Too many default routes ({len(default_routes)})")
             suggestions.append("Consider cleaning up redundant routes")
         
         # Check for load balancing route
-        lb_routes = [r for r in routes if 'nexthop' in r]
-        if not lb_routes and len(default_routes) > 1:
+        if not nexthop_routes and len(default_routes) > 1:
             issues.append("Multiple default routes without load balancing")
             suggestions.append("Configure proper load balancing with nexthop")
         
         # Check gateway connectivity
         gateways = []
+        
+        # Extract gateways from both regular default routes and nexthop routes
         for route in default_routes:
+            if 'via' in route:
+                parts = route.split()
+                for i, part in enumerate(parts):
+                    if part == 'via' and i + 1 < len(parts):
+                        gateways.append(parts[i + 1])
+        
+        # Extract gateways from nexthop routes
+        for route in nexthop_routes:
             if 'via' in route:
                 parts = route.split()
                 for i, part in enumerate(parts):
@@ -480,7 +519,7 @@ class NetworkManager:
             'issues': issues,
             'suggestions': suggestions,
             'default_routes_count': len(default_routes),
-            'load_balancing_active': len(lb_routes) > 0
+            'load_balancing_active': len(nexthop_routes) > 0
         }
     def auto_fix_routing(self):
         """Automatically detect and fix routing issues"""
