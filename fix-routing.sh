@@ -36,9 +36,20 @@ for gw in "$lan_gw" "$usb_gw"; do
     fi
 done
 
-# Hapus semua default route
+# Hapus semua default route secara komprehensif
 echo -e "\n🧹 Cleaning up existing default routes..."
-sudo ip route del default 2>/dev/null
+# Hapus semua default route (termasuk yang dengan metric)
+while sudo ip route del default 2>/dev/null; do
+    echo "   Removed default route"
+done
+
+# Hapus default route dengan metric tertentu jika masih ada
+sudo ip route del default metric 100 2>/dev/null || true
+sudo ip route del default metric 200 2>/dev/null || true
+sudo ip route del default metric 300 2>/dev/null || true
+
+# Hapus default route dengan proto dhcp jika masih ada
+sudo ip route del default proto dhcp 2>/dev/null || true
 
 # Tambah nexthop default route jika keduanya aktif
 if [[ -n "$lan_gw" && -n "$usb_gw" ]]; then

@@ -602,3 +602,220 @@ default
 [2025-07-26 14:08:51]   usb-tether: IP=192.168.42.191, Gateway=N/A
 [2025-07-26 14:08:51] USB-related routes: 2
 [2025-07-26 14:08:51] === End Status ===
+[2025-07-26 17:47:57] Starting optimized USB tethering monitor (continuous mode)
+[2025-07-26 18:00:14] Starting optimized USB tethering monitor (continuous mode)
+[2025-07-26 18:16:46] === USB Tethering Status ===
+[2025-07-26 18:16:46] Active USB interfaces: usb-tether
+[2025-07-26 18:16:46]   usb-tether: IP=192.168.42.15, Gateway=N/A
+[2025-07-26 18:16:46] USB-related routes: 4
+[2025-07-26 18:16:46] === End Status ===
+[2025-07-26 18:33:28] === USB Tethering Status ===
+[2025-07-26 18:33:28] Active USB interfaces: usb-tether
+[2025-07-26 18:33:28]   usb-tether: IP=192.168.42.15, Gateway=N/A
+[2025-07-26 18:33:28] USB-related routes: 4
+[2025-07-26 18:33:28] === End Status ===
+[2025-07-26 18:50:09] === USB Tethering Status ===
+[2025-07-26 18:50:09] Active USB interfaces: usb-tether
+[2025-07-26 18:50:09]   usb-tether: IP=192.168.42.15, Gateway=N/A
+[2025-07-26 18:50:09] USB-related routes: 4
+[2025-07-26 18:50:09] === End Status ===
+[2025-07-26 19:06:51] === USB Tethering Status ===
+[2025-07-26 19:06:51] Active USB interfaces: usb-tether
+[2025-07-26 19:06:51]   usb-tether: IP=192.168.42.15, Gateway=192.168.42.129
+[2025-07-26 19:06:51] USB-related routes: 5
+[2025-07-26 19:06:51] === End Status ===
+[2025-07-26 19:23:32] === USB Tethering Status ===
+[2025-07-26 19:23:32] Active USB interfaces: usb-tether
+[2025-07-26 19:23:32]   usb-tether: IP=192.168.42.15, Gateway=192.168.42.129
+[2025-07-26 19:23:32] USB-related routes: 5
+[2025-07-26 19:23:32] === End Status ===
+[2025-07-26 19:40:14] === USB Tethering Status ===
+[2025-07-26 19:40:14] Active USB interfaces: usb-tether
+[2025-07-26 19:40:14]   usb-tether: IP=192.168.42.15, Gateway=N/A
+[2025-07-26 19:40:14] USB-related routes: 2
+[2025-07-26 19:40:14] === End Status ===
+[2025-07-26 19:56:55] === USB Tethering Status ===
+[2025-07-26 19:56:55] Active USB interfaces: usb-tether
+[2025-07-26 19:56:55]   usb-tether: IP=192.168.42.15, Gateway=N/A
+[2025-07-26 19:56:55] USB-related routes: 2
+[2025-07-26 19:56:55] === End Status ===
+[2025-07-26 20:13:37] === USB Tethering Status ===
+[2025-07-26 20:13:37] Active USB interfaces: usb-tether
+[2025-07-26 20:13:37]   usb-tether: IP=192.168.42.15, Gateway=192.168.42.129
+[2025-07-26 20:13:37] USB-related routes: 4
+[2025-07-26 20:13:37] === End Status ===
+[2025-07-26 20:30:18] === USB Tethering Status ===
+[2025-07-26 20:30:18] Active USB interfaces: usb-tether
+[2025-07-26 20:30:18]   usb-tether: IP=192.168.42.15, Gateway=192.168.42.129
+[2025-07-26 20:30:18] USB-related routes: 4
+[2025-07-26 20:30:18] === End Status ===
+[2025-07-26 20:31:28] USB interface change detected: 'usb-tether' -> ''
+[2025-07-26 20:31:28] No active USB interface found after change
+[2025-07-26 20:32:29] USB interface change detected: '' -> 'usb-tether'
+[2025-07-26 20:32:29] Reconfiguring routing for interface: usb-tether
+[2025-07-26 20:32:29] Running USB tethering configuration...
+🔍 USB Tethering Auto-Configuration
+==================================
+Starting USB tethering auto-configuration...
+Detecting USB tethering interfaces...
+📱 Found USB interfaces:
+usb-tether
+🔧 Configuring interface: usb-tether
+📶 Bringing up interface usb-tether...
+🌐 Requesting IP address via DHCP...
+Internet Systems Consortium DHCP Client 4.4.3-P1
+Copyright 2004-2022 Internet Systems Consortium.
+All rights reserved.
+For info, please visit https://www.isc.org/software/dhcp/
+
+Listening on LPF/usb-tether/ae:f6:fe:da:d5:ca
+Sending on   LPF/usb-tether/ae:f6:fe:da:d5:ca
+Sending on   Socket/fallback
+xid: warning: no netdev with useable HWADDR found for seed's uniqueness enforcement
+xid: rand init seed (0x68fbd9ee) built using gethostid
+DHCPREQUEST for 192.168.42.15 on usb-tether to 255.255.255.255 port 67 (xid=0x2e999035)
+DHCPNAK from 192.168.42.129 (xid=0x3590992e)
+DHCPDISCOVER on usb-tether to 255.255.255.255 port 67 interval 3 (xid=0x506cc162)
+DHCPOFFER of 192.168.42.27 from 192.168.42.129
+DHCPREQUEST for 192.168.42.27 on usb-tether to 255.255.255.255 port 67 (xid=0x62c16c50)
+DHCPACK of 192.168.42.27 from 192.168.42.129 (xid=0x506cc162)
+bound to 192.168.42.27 -- renewal in 3273 seconds.
+✅ Interface usb-tether configured with IP: 192.168.42.27
+🚪 Gateway detected: 192.168.42.129
+⚖️ Setting up load balancing...
+🔗 Setting up load balancing for usb-tether (IP: 192.168.42.27, GW: 192.168.42.129)
+✅ Default route set via USB: 192.168.42.129
+🧪 Testing connectivity...
+❌ Internet connectivity: FAILED
+✅ DNS resolution: OK
+
+📊 Current Network Status
+========================
+🔌 Network Interfaces:
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+      inet 127.0.0.1/8 scope host lo
+  2: enp0s25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+      inet 192.168.100.50/24 brd 192.168.100.255 scope global enp0s25
+  4: enx5c925ed8e159: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+  5: wlp2s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+  6: tailscale0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1280 qdisc fq_codel state UNKNOWN group default qlen 500
+      inet 100.79.102.98/32 scope global tailscale0
+  8: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+      inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+  9: br-8066fcd739d3: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+      inet 172.18.0.1/16 brd 172.18.255.255 scope global br-8066fcd739d3
+  10: veth4cb86c1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  11: veth225f474@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  12: veth8cbe361@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  13: vethd0f1c57@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  14: vethce8befd@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+  15: br-45d7f0f76156: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+      inet 172.19.0.1/16 brd 172.19.255.255 scope global br-45d7f0f76156
+  22: vethfdf2ccc@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-45d7f0f76156 state UP group default 
+  24: Meta: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 9000 qdisc fq_codel state UNKNOWN group default qlen 500
+      inet 198.18.0.1/30 brd 198.18.0.3 scope global Meta
+  25: usb-tether: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+      inet 192.168.42.27/24 brd 192.168.42.255 scope global dynamic usb-tether
+
+🛣️ Routing Table:
+  default via 192.168.42.129 dev usb-tether 
+  172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+  172.18.0.0/16 dev br-8066fcd739d3 proto kernel scope link src 172.18.0.1 linkdown 
+  172.19.0.0/16 dev br-45d7f0f76156 proto kernel scope link src 172.19.0.1 
+  192.168.42.0/24 dev usb-tether proto kernel scope link src 192.168.42.27 
+  192.168.100.0/24 dev enp0s25 proto kernel scope link src 192.168.100.50 
+  198.18.0.0/30 dev Meta proto kernel scope link src 198.18.0.1 
+
+🌐 Active Connections:
+  Netid State  Recv-Q Send-Q                       Local Address:Port  Peer Address:PortProcess
+  udp   UNCONN 0      0                               172.18.0.1:56490      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:7359       0.0.0.0:*          
+  udp   UNCONN 0      0                               172.19.0.1:33987      0.0.0.0:*          
+  udp   UNCONN 0      0                                127.0.0.1:34087      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:60829      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32410      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32412      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32413      0.0.0.0:*          
+  udp   UNCONN 0      0                                  0.0.0.0:32414      0.0.0.0:*          
+
+🎉 USB tethering configuration completed!
+📱 You can now access the web interface at: http://localhost:5020
+[2025-07-26 20:32:47] USB tethering configuration completed successfully
+[2025-07-26 20:32:47] Setting up load balancing...
+🔄 Setting up optimized load balancing for USB tethering...
+📊 Interface Information:
+  LAN (enp0s25): IP=192.168.100.50, Gateway=192.168.100.1
+  USB (usb-tether): IP=192.168.42.27, Gateway=192.168.42.129
+🔧 Configuring optimized load balancing...
+  Cleaning up existing configuration...
+  Setting up LAN routing table...
+  Setting up USB routing table...
+  Setting up main routing table...
+  Adding load balanced default route...
+✅ Load balancing configured: LAN (192.168.100.1) + USB (192.168.42.129)
+🧪 Testing connectivity...
+⚠️  Internet connectivity: Limited or failed
+📋 Current routing table (top 5 routes):
+default 
+	nexthop via 192.168.100.1 dev enp0s25 weight 1 
+	nexthop via 192.168.42.129 dev usb-tether weight 1 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+172.18.0.0/16 dev br-8066fcd739d3 proto kernel scope link src 172.18.0.1 linkdown 
+✅ Optimized load balancing setup completed!
+[2025-07-26 20:32:52] Load balancing setup completed successfully
+[2025-07-26 20:32:52] Testing connectivity...
+[2025-07-26 20:33:02] ❌ Internet connectivity: FAILED
+[2025-07-26 20:47:14] === USB Tethering Status ===
+[2025-07-26 20:47:14] Active USB interfaces: usb-tether
+[2025-07-26 20:47:14]   usb-tether: IP=192.168.42.27, Gateway=N/A
+[2025-07-26 20:47:14] USB-related routes: 2
+[2025-07-26 20:47:14] === End Status ===
+[2025-07-26 21:03:55] === USB Tethering Status ===
+[2025-07-26 21:03:55] Active USB interfaces: usb-tether
+[2025-07-26 21:03:55]   usb-tether: IP=192.168.42.27, Gateway=N/A
+[2025-07-26 21:03:55] USB-related routes: 2
+[2025-07-26 21:03:55] === End Status ===
+[2025-07-26 21:20:37] === USB Tethering Status ===
+[2025-07-26 21:20:37] Active USB interfaces: usb-tether
+[2025-07-26 21:20:37]   usb-tether: IP=192.168.42.27, Gateway=N/A
+[2025-07-26 21:20:37] USB-related routes: 2
+[2025-07-26 21:20:37] === End Status ===
+[2025-07-26 21:37:18] === USB Tethering Status ===
+[2025-07-26 21:37:18] Active USB interfaces: usb-tether
+[2025-07-26 21:37:18]   usb-tether: IP=192.168.42.27, Gateway=192.168.42.129
+[2025-07-26 21:37:18] USB-related routes: 5
+[2025-07-26 21:37:18] === End Status ===
+[2025-07-26 21:43:19] USB interface change detected: 'usb-tether' -> ''
+[2025-07-26 21:43:19] No active USB interface found after change
+[2025-07-26 21:54:00] === USB Tethering Status ===
+[2025-07-26 21:54:00] No active USB tethering interfaces found
+[2025-07-26 21:54:00] USB-related routes: 0
+[2025-07-26 21:54:00] === End Status ===
+[2025-07-26 22:10:41] === USB Tethering Status ===
+[2025-07-26 22:10:41] No active USB tethering interfaces found
+[2025-07-26 22:10:41] USB-related routes: 0
+[2025-07-26 22:10:41] === End Status ===
+[2025-07-26 22:27:23] === USB Tethering Status ===
+[2025-07-26 22:27:23] No active USB tethering interfaces found
+[2025-07-26 22:27:23] USB-related routes: 0
+[2025-07-26 22:27:23] === End Status ===
+[2025-07-26 22:44:04] === USB Tethering Status ===
+[2025-07-26 22:44:04] No active USB tethering interfaces found
+[2025-07-26 22:44:04] USB-related routes: 0
+[2025-07-26 22:44:04] === End Status ===
+[2025-07-26 23:00:46] === USB Tethering Status ===
+[2025-07-26 23:00:46] No active USB tethering interfaces found
+[2025-07-26 23:00:46] USB-related routes: 0
+[2025-07-26 23:00:46] === End Status ===
+[2025-07-26 23:17:27] === USB Tethering Status ===
+[2025-07-26 23:17:27] No active USB tethering interfaces found
+[2025-07-26 23:17:27] USB-related routes: 0
+[2025-07-26 23:17:27] === End Status ===
+[2025-07-26 23:34:09] === USB Tethering Status ===
+[2025-07-26 23:34:09] No active USB tethering interfaces found
+[2025-07-26 23:34:09] USB-related routes: 0
+[2025-07-26 23:34:09] === End Status ===
+[2025-07-26 23:50:50] === USB Tethering Status ===
+[2025-07-26 23:50:50] No active USB tethering interfaces found
+[2025-07-26 23:50:50] USB-related routes: 0
+[2025-07-26 23:50:50] === End Status ===
