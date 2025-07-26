@@ -60,8 +60,13 @@ detect_usb_interfaces() {
     # Check for standard usb-tether name first (fastest check)
     if [ -d "/sys/class/net/usb-tether" ]; then
         local state=$(cat "/sys/class/net/usb-tether/operstate" 2>/dev/null)
-        if [[ "$state" == "up" ]]; then
-            interfaces="usb-tether"
+        # Accept both "up" and "unknown" states for USB interfaces (USB tethering often shows as "unknown")
+        if [[ "$state" == "up" || "$state" == "unknown" ]]; then
+            # Double-check that interface is actually functional by checking if it has carrier
+            local carrier=$(cat "/sys/class/net/usb-tether/carrier" 2>/dev/null)
+            if [[ "$carrier" == "1" ]] || [[ "$state" == "unknown" ]]; then
+                interfaces="usb-tether"
+            fi
         fi
     fi
     
@@ -71,8 +76,13 @@ detect_usb_interfaces() {
             if [ -d "$iface" ]; then
                 local iface_name=$(basename "$iface")
                 local state=$(cat "$iface/operstate" 2>/dev/null)
-                if [[ "$state" == "up" ]]; then
-                    interfaces="$interfaces $iface_name"
+                # Accept both "up" and "unknown" states for USB interfaces
+                if [[ "$state" == "up" || "$state" == "unknown" ]]; then
+                    # Double-check functionality
+                    local carrier=$(cat "$iface/carrier" 2>/dev/null)
+                    if [[ "$carrier" == "1" ]] || [[ "$state" == "unknown" ]]; then
+                        interfaces="$interfaces $iface_name"
+                    fi
                 fi
             fi
         done
@@ -95,6 +105,20 @@ get_active_usb_interface() {
             fi
         fi
     done
+    
+    # Fallback: if no interface with IP found, but we have detected USB interfaces,
+    # check if any of them might be getting configured
+    for iface in $usb_interfaces; do
+        if [ -f "/sys/class/net/$iface/address" ]; then
+            # Check if interface exists and is not down
+            local flags=$(cat "/sys/class/net/$iface/flags" 2>/dev/null)
+            if [ -n "$flags" ] && [ "$flags" != "0x1002" ]; then  # Not just BROADCAST
+                echo "$iface"
+                return 0
+            fi
+        fi
+    done
+    
     return 1
 }
 
